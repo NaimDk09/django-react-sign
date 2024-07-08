@@ -59,7 +59,9 @@ ROOT_URLCONF = 'myproject.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'react-ui/build')
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -194,3 +196,13 @@ MAIL_PORT = 587
 EMAIL_USE_TLS = True 
 EMAIL_HOST_USER = 'aece.portal.app@gmail.com'
 EMAIL_HOST_PASSWORD = 'jphubfwmslzdhese'
+
+
+
+
+STATIC_URL = '/static/'
+
+
+STATICFILES_DIRS = [
+     os.path.join(BASE_DIR, 'react-ui/build/static')
+]
