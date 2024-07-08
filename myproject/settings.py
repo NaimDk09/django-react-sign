@@ -180,10 +180,10 @@ AUTH_USER_MODEL = 'signing.Client'
 
 # cors origin
 CORS_ALLOW_ALL_ORIGINS = True
-""" CORS_ALLOWED_ORIGINS = [
-    'http://192.168.1.129:3000'  # my React frontend origin
+ CORS_ALLOWED_ORIGINS = [
+    '*'  # my React frontend origin
     
-] """
+] 
 
 CORS_ALLOW_HEADERS = ['Content-Type', 'X-CSRFToken', 'Authorization', 'X-Product-ID', 'product_id', 'csrfmiddlewaretoken', 'csrftoken']
 
