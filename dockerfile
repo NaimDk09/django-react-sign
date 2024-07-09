@@ -1,8 +1,8 @@
 FROM python:3.11.4
 
-# Install telnet and netcat
+# Install telnet and netcat (netcat-openbsd)
 RUN apt-get update && \
-    apt-get install -y telnet netcat
+    apt-get install -y telnet netcat-openbsd
 
 # Set working directory
 WORKDIR /app
