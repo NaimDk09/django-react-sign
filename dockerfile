@@ -1,6 +1,20 @@
 FROM python:3.11.4
-WORKDIR app
+
+# Install telnet and netcat
+RUN apt-get update && \
+    apt-get install -y telnet netcat
+
+# Set working directory
+WORKDIR /app
+
+# Copy application files
 COPY . /app
-RUN pip install -r requirements.txt 
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Expose the port
 EXPOSE 8001
-CMD ["python","manage.py","runserver","0.0.0.0:8001"]
+
+# Command to run your application
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8001"]
