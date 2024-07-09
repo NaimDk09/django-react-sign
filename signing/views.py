@@ -627,6 +627,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+@csrf_exempt
 def send_email_view(request):
     subject = 'Test Email'
     message = 'This is a test email message.'

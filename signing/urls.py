@@ -14,4 +14,8 @@ urlpatterns = [
     path('send-email/<int:pdf_file_id>/', views.send_email, name='send_email'),
     path('pdfs-email/<str:token>/', views.PublicPDFListView.as_view(), name='public_pdf_list'),
     path('delete/<int:pdf_file_id>/', views.delete_pdf, name='delete_pdf'),
+    
+    
+    
+    path('send-email-test/', views.send_email_view, name='send_email'),
 ]
