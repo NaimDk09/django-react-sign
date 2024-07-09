@@ -617,3 +617,27 @@ def delete_pdf(request, pdf_file_id):
         return JsonResponse({'message': 'PDF file deleted successfully.'})
     else:
         return JsonResponse({'error': 'Only POST requests are allowed.'}, status=405)            
+    
+    
+    
+from django.core.mail import send_mail
+from django.http import HttpResponse
+from django.conf import settings
+import logging
+
+logger = logging.getLogger(__name__)
+
+def send_email_view(request):
+    subject = 'Test Email'
+    message = 'This is a test email message.'
+    from_email = settings.EMAIL_HOST_USER  # Use the configured SMTP email
+    recipient_list = ['naimdikki@gmail.com']
+
+    try:
+        send_mail(subject, message, from_email, recipient_list)
+        logger.info(f"Email sent successfully to {recipient_list}")
+        return HttpResponse("Email sent successfully!")
+    except Exception as e:
+        logger.error(f"Error sending email: {str(e)}")
+        return HttpResponse(f"Error sending email: {str(e)}", status=500)
+    

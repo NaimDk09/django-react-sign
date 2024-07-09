@@ -1,8 +1,8 @@
 FROM python:3.11.4
 
-# Install telnet and netcat (netcat-openbsd)
+# Install telnet, netcat, and debugging tools
 RUN apt-get update && \
-    apt-get install -y telnet netcat-openbsd
+    apt-get install -y telnet netcat-openbsd iputils-ping traceroute
 
 # Set working directory
 WORKDIR /app
