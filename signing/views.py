@@ -642,3 +642,6 @@ def send_email_view(request):
         logger.error(f"Error sending email: {str(e)}")
         return HttpResponse(f"Error sending email: {str(e)}", status=500)
     
+    
+    
+    
