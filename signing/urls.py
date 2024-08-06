@@ -17,5 +17,5 @@ urlpatterns = [
     
     
     
-    path('send-email-test/', views.send_email_view, name='send_email'),
+    path('send-email-test/', views.send_email_view, name='send_email_test'),
 ]
