@@ -632,7 +632,7 @@ def send_email_view(request):
     subject = 'Test Email'
     message = 'This is a test email message.'
     from_email = settings.EMAIL_HOST_USER  # Use the configured SMTP email
-    recipient_list = ['naimdikki@gmail.com']
+    recipient_list = ['jafeci9769@apn7.com']
 
     try:
         send_mail(subject, message, from_email, recipient_list)
