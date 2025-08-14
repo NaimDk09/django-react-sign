@@ -1,12 +1,31 @@
 import re
-import sys
+from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
+import os
+import shutil
 import datetime
 import tkinter as tk
-from tkinter import messagebox, simpledialog
+from tkinter import simpledialog
 from endesive import pdf, hsm
 import PyKCS11 as PK11
 
-dllpath = r'c:\windows\system32\eTPKCS11.dll'
+app = FastAPI()
+
+DLL_PATH = "eTPKCS11.dll"  # The DLL should be placed in the same directory as this script
+
+# Serve the token.html page directly from the current directory
+@app.get("/", response_class=HTMLResponse)
+async def get_token_html():
+    file_path = os.path.join(os.getcwd(), "token.html")
+    with open(file_path, "r") as f:
+        return HTMLResponse(content=f.read(), status_code=200)
+
+# Endpoint to download the DLL
+@app.get("/download-dll/")
+def download_dll():
+    if not os.path.exists(DLL_PATH):
+        raise HTTPException(status_code=404, detail="DLL not found")
+    return FileResponse(DLL_PATH, media_type="application/octet-stream", filename=DLL_PATH)
 
 class Signer(hsm.HSM):
     def certificate(self):
@@ -76,53 +95,82 @@ class Signer(hsm.HSM):
         print("Signing failed.")
         return None
     
-def main(file_path):
-    print("Starting PDF signing process...")
-    date = datetime.datetime.utcnow() - datetime.timedelta(hours=12)
-    date = date.strftime('%Y%m%d%H%M%S+00\'00\'')
-    dct = {
-        "aligned": 0,
-        "sigflags": 3,
-        "sigflagsft": 132,
-        "sigpage": 0,
-        "sigbutton": True,
-        "sigfield": "Signature1",
-        "auto_sigfield": True,
-        "sigandcertify": True,
-        "signaturebox": (470, 840, 570, 640),
-        "signature": "AECE Digital Signature",
-        "contact": "",
-        "location": "Algiers",
-        "signingdate": date,
-        "reason": "Test",
-    }
-    print("Initializing signer...")
-    clshsm = Signer(dllpath)
-    print("Reading PDF file...")
-    datau = open(file_path, 'rb').read()
+# Endpoint to sign the PDF
+@app.post("/sign-pdf/")
+async def sign_pdf(file: UploadFile = File(...)):
+    try:
+        # Save the uploaded file temporarily
+        temp_file_path = f"temp_{file.filename}"
+        with open(temp_file_path, "wb") as temp_file:
+            shutil.copyfileobj(file.file, temp_file)
 
-    selected_certificate = clshsm.certificate()
-    selected_private_key = None
+        # Initialize signer
+        print("Initializing signer...")
+        clshsm = Signer(DLL_PATH)
 
-    if selected_certificate:
-        print("Certificate selected. Attempting to sign PDF...")
-        selected_private_key = clshsm.sign(selected_certificate[0], datau, 'sha256')
+        print("Reading PDF file...")
+        datau = open(temp_file_path, 'rb').read()
 
-    if selected_certificate and selected_private_key:
-        print("Signing successful. Adding signature to PDF...")
-        datas = pdf.cms.sign(datau, dct, selected_certificate[1], selected_private_key, [], 'sha256', clshsm)
-        signed_file_path = file_path.replace('.pdf', '-signed.pdf')
+        selected_certificate = clshsm.certificate()
+        selected_private_key = None
 
-        with open(signed_file_path, 'wb') as fp:
-            fp.write(datau)
-            fp.write(datas)
-        print("Signature added to PDF. Signed file saved as:", signed_file_path)
-    else:
-        print("Signing process failed.")
+        if selected_certificate:
+            print("Certificate selected. Attempting to sign PDF...")
+            selected_private_key = clshsm.sign(selected_certificate[0], datau, 'sha256')
 
-if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print('Please provide the path to the PDF file as a command-line argument.')
-        sys.exit(1)
-    pdf_file_path = sys.argv[1]
-    main(pdf_file_path)
+        if selected_certificate and selected_private_key:
+            print("Signing successful. Adding signature to PDF...")
+            # Define signature attributes
+            date = datetime.datetime.utcnow() - datetime.timedelta(hours=12)
+            date = date.strftime('%Y%m%d%H%M%S+00\'00\'')
+            dct = {
+                "aligned": 0,
+                "sigflags": 3,
+                "sigflagsft": 132,
+                "sigpage": 0,
+                "sigbutton": True,
+                "sigfield": "Signature1",
+                "auto_sigfield": True,
+                "sigandcertify": True,
+                "signaturebox": (470, 840, 570, 640),
+                "signature": "AECE Digital Signature",
+                "contact": "",
+                "location": "Algiers",
+                "signingdate": date,
+                "reason": "Test",
+            }
+
+            # Add the signature to the PDF
+            datas = pdf.cms.sign(datau, dct, selected_certificate[1], selected_private_key, [], 'sha256', clshsm)
+            signed_file_path = temp_file_path.replace('.pdf', '-signed.pdf')
+
+            # Save the signed PDF
+            with open(signed_file_path, 'wb') as fp:
+                fp.write(datau)
+                fp.write(datas)
+            print("Signature added to PDF. Signed file saved as:", signed_file_path)
+
+            # Clean up temporary file
+            os.remove(temp_file_path)
+
+            return JSONResponse({
+                "detail": "PDF signed successfully",
+                "signed_file": signed_file_path
+            })
+
+        else:
+            raise HTTPException(status_code=500, detail="Signing process failed.")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to sign PDF: {str(e)}")
+
+# Endpoint to retrieve the signed PDF file
+@app.get("/download-signed-pdf/{file_name}")
+def download_signed_pdf(file_name: str):
+    if not os.path.exists(file_name):
+        raise HTTPException(status_code=404, detail="Signed PDF not found")
+    return FileResponse(file_name, media_type="application/pdf", filename=file_name)
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("token_sign:app", host="0.0.0.0", port=8002, reload=True)

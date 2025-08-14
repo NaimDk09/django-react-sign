@@ -181,7 +181,7 @@ AUTH_USER_MODEL = 'signing.Client'
 # cors origin
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
-    'http://100.26.213.54'  # my React frontend origin
+    'http://100.26.213.54',  # my React frontend origin
     
 ]
 

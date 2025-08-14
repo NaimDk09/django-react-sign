@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Sign</title>
+</head>
+<body>
+    <h1>Sign PDF</h1>
+
+    <!-- Button to download the DLL -->
+    <button onclick="window.location.href='/download-dll/'">Download DLL</button>
+
+    <h2>Upload PDF for Signing</h2>
+    <form id="upload-form" action="/sign-pdf/" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".pdf" required>
+        <button type="submit">Sign PDF</button>
+    </form>
+
+    <div id="response"></div>
+
+    <script>
+        // Optional: Handle the PDF signing process via JavaScript
+        document.getElementById("upload-form").addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const formData = new FormData(this);
+            const response = await fetch("/sign-pdf/", {
+                method: "POST",
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                document.getElementById("response").innerHTML = `Success: ${result.detail}. <a href="/download-signed-pdf/${result.signed_file}">Download Signed PDF</a>`;
+            } else {
+                document.getElementById("response").innerHTML = `Error: ${result.detail}`;
+            }
+        });
+    </script>
+</body>
+</html>
